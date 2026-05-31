@@ -67,7 +67,7 @@ export default function CustomCursor() {
         transition={{
           type: 'spring',
           stiffness: 300,
-          damping: 50,
+          damping: 30,
         }}
         className={`pointer-events-none fixed top-0 left-0 w-10 h-10 border-2 border-blue-300 rounded-full ${
           isVisible ? 'opacity-100' : 'opacity-0'
