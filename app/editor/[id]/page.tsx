@@ -1,65 +1,91 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import CodeEditor from '@/components/CodeEditor';
 import PageTransition from '@/components/PageTransition';
 import { useParams } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
+
+interface Problem {
+  id: number;
+  title: string;
+  difficulty: 'Easy' | 'Medium' | 'Hard';
+  description: string;
+  examples: Array<{ input: string; output: string }>;
+}
 
 export default function EditorPage() {
   const params = useParams();
   const problemId = parseInt(params.id as string);
+  const [problem, setProblem] = useState<Problem | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const { user } = useAuth();
 
-  // Mock problem data (we'll replace with real data from database later)
-  const problems: Record<number, any> = {
-    1: {
-      id: 1,
-      title: 'Hello World',
-      difficulty: 'Easy',
-      description: 'Write a program that prints "Hello, World!"',
-      examples: [
-        { input: 'None', output: 'Hello, World!' },
-      ],
-    },
-    2: {
-      id: 2,
-      title: 'Sum of Two Numbers',
-      difficulty: 'Easy',
-      description: 'Write a function that returns the sum of two numbers.',
-      examples: [
-        { input: 'sum(2, 3)', output: '5' },
-        { input: 'sum(10, 20)', output: '30' },
-      ],
-    },
-    3: {
-      id: 3,
-      title: 'Fibonacci Sequence',
-      difficulty: 'Medium',
-      description: 'Write a function that generates the Fibonacci sequence up to n terms.',
-      examples: [
-        { input: 'fibonacci(5)', output: '[0, 1, 1, 2, 3]' },
-      ],
-    },
+  useEffect(() => {
+    const fetchProblem = async () => {
+      try {
+        const response = await fetch('/api/problems');
+        const data = await response.json();
+
+        if (response.ok && data.problems) {
+          const foundProblem = data.problems.find((p: any) => p.id === problemId);
+          if (foundProblem) {
+            // Parse examples if they're JSON strings
+            const examples = typeof foundProblem.examples === 'string' 
+              ? JSON.parse(foundProblem.examples) 
+              : foundProblem.examples;
+
+            setProblem({
+              id: foundProblem.id,
+              title: foundProblem.title,
+              difficulty: foundProblem.difficulty,
+              description: foundProblem.description,
+              examples: Array.isArray(examples) ? examples : [],
+            });
+          } else {
+            setError('Problem not found');
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching problem:', err);
+        setError('Failed to load problem');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProblem();
+  }, [problemId]);
+
+  const handleSubmitCode = async (code: string) => {
+    if (!user) {
+      alert('Please sign in to submit code');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/submissions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user.id,
+          problemId: problem?.id,
+          code,
+        }),
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        alert('Code submitted successfully!');
+      } else {
+        alert('Error: ' + data.error);
+      }
+    } catch (error) {
+      alert('Failed to submit code');
+    }
   };
-
-  const problem = problems[problemId];
-
-  if (!problem) {
-    return (
-      <PageTransition>
-        <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-800 via-gray-900 to-black">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5 }}
-            className="text-2xl text-gray-400"
-          >
-            Problem not found
-          </motion.div>
-        </div>
-      </PageTransition>
-    );
-  }
 
   const panelVariants = {
     hidden: { opacity: 0, x: -30 },
@@ -78,6 +104,39 @@ export default function EditorPage() {
       transition: { duration: 0.5, delay: i * 0.1 },
     }),
   };
+
+  if (loading) {
+    return (
+      <PageTransition>
+        <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-800 via-gray-900 to-black">
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ repeat: Infinity, duration: 2 }}
+            className="text-4xl"
+          >
+            ⏳
+          </motion.div>
+        </div>
+      </PageTransition>
+    );
+  }
+
+  if (error || !problem) {
+    return (
+      <PageTransition>
+        <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-800 via-gray-900 to-black">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5 }}
+            className="text-2xl text-red-400"
+          >
+            {error || 'Problem not found'}
+          </motion.div>
+        </div>
+      </PageTransition>
+    );
+  }
 
   return (
     <PageTransition>
@@ -175,7 +234,7 @@ export default function EditorPage() {
           transition={{ duration: 0.6 }}
           className="w-2/3"
         >
-          <CodeEditor problemId={problemId} onSubmit={(code) => console.log(code)} />
+          <CodeEditor problemId={problemId} onSubmit={handleSubmitCode} />
         </motion.div>
       </div>
     </PageTransition>

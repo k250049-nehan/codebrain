@@ -2,21 +2,39 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
+import { useAuth } from '@/context/AuthContext';
 import PageTransition from '@/components/PageTransition';
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const { signIn, signUp } = useAuth();
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
     setLoading(true);
-    // We'll implement actual auth later with Supabase
-    console.log(isLogin ? 'Logging in...' : 'Signing up...', { email, password });
-    setLoading(false);
+
+    try {
+      if (isLogin) {
+        await signIn(email, password);
+      } else {
+        await signUp(email, password, name);
+      }
+      // Redirect to dashboard after successful auth
+      router.push('/dashboard');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const formVariants = {
@@ -60,11 +78,42 @@ export default function AuthPage() {
             </p>
           </motion.div>
 
+          {/* Error Message */}
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-red-500/20 border border-red-500 text-red-200 p-3 rounded-lg mb-6 text-sm"
+            >
+              {error}
+            </motion.div>
+          )}
+
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Name (only for signup) */}
+            {!isLogin && (
+              <motion.div
+                custom={0}
+                variants={inputVariants}
+                initial="hidden"
+                animate="visible"
+              >
+                <label className="block text-white font-semibold mb-2">Full Name</label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="John Doe"
+                  className="w-full px-4 py-2 border-2 border-blue-500 bg-blue-900/30 rounded-lg focus:border-blue-300 focus:outline-none transition text-white placeholder-blue-400"
+                  required={!isLogin}
+                />
+              </motion.div>
+            )}
+
             {/* Email */}
             <motion.div
-              custom={0}
+              custom={isLogin ? 0 : 1}
               variants={inputVariants}
               initial="hidden"
               animate="visible"
@@ -82,7 +131,7 @@ export default function AuthPage() {
 
             {/* Password */}
             <motion.div
-              custom={1}
+              custom={isLogin ? 1 : 2}
               variants={inputVariants}
               initial="hidden"
               animate="visible"
@@ -100,7 +149,7 @@ export default function AuthPage() {
 
             {/* Submit Button */}
             <motion.button
-              custom={2}
+              custom={isLogin ? 2 : 3}
               variants={inputVariants}
               initial="hidden"
               animate="visible"
@@ -110,7 +159,16 @@ export default function AuthPage() {
               disabled={loading}
               className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 text-white font-bold py-3 px-4 rounded-lg transition disabled:from-gray-500 disabled:to-gray-600"
             >
-              {loading ? 'Loading...' : isLogin ? 'Sign In' : 'Sign Up'}
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <span className="animate-spin">⏳</span>
+                  {isLogin ? 'Signing in...' : 'Creating account...'}
+                </span>
+              ) : isLogin ? (
+                'Sign In'
+              ) : (
+                'Sign Up'
+              )}
             </motion.button>
           </form>
 
@@ -124,7 +182,11 @@ export default function AuthPage() {
             <p className="text-blue-200">
               {isLogin ? "Don't have an account?" : 'Already have an account?'}
               <button
-                onClick={() => setIsLogin(!isLogin)}
+                onClick={() => {
+                  setIsLogin(!isLogin);
+                  setError('');
+                  setName('');
+                }}
                 className="text-blue-300 font-semibold hover:text-blue-100 underline ml-1 transition"
               >
                 {isLogin ? 'Sign Up' : 'Sign In'}
