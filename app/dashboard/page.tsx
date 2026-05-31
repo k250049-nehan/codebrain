@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import ProblemCard from '@/components/ProblemCard';
+import PageTransition from '@/components/PageTransition';
 
 export default function Dashboard() {
   // Mock problems (we'll replace with real data from database later)
@@ -39,46 +40,48 @@ export default function Dashboard() {
   const solvedCount = problems.filter((p) => p.solved).length;
 
   return (
-    <div className="bg-gradient-to-t from-gray-800 to-gray-900 min-h-screen py-12">
-      <div className="max-w-7xl mx-auto px-6">
-        {/* Header */}
-        <div className="mb-12">
-          <h1 className="text-4xl font-bold text-white-900 mb-2">Dashboard</h1>
-          <p className="text-white-600">Welcome back! Keep practicing to improve your skills.</p>
-        </div>
+    <PageTransition>
+      <div className="bg-gradient-to-br from-gray-800 via-gray-900 to-black min-h-screen py-12">
+        <div className="max-w-7xl mx-auto px-6">
+          {/* Header */}
+          <div className="mb-12">
+            <h1 className="text-4xl font-bold text-white mb-2">Dashboard</h1>
+            <p className="text-gray-400">Welcome back! Keep practicing to improve your skills.</p>
+          </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
-          <div className="bg-blue-500 rounded-lg shadow p-6">
-            <div className="text-white-600 text-sm font-semibold">Problems Solved</div>
-            <div className="text-3xl font-bold text-white-900 mt-2">{solvedCount}</div>
-          </div>
-          <div className="bg-purple-500 rounded-lg shadow p-6">
-            <div className="text-white-600 text-sm font-semibold">Problems Total</div>
-            <div className="text-3xl font-bold text-white-900 mt-2">{problems.length}</div>
-          </div>
-          <div className="bg-green-500 rounded-lg shadow p-6">
-            <div className="text-white-600 text-sm font-semibold">Success Rate</div>
-            <div className="text-3xl font-bold text-white-900 mt-2">
-              {Math.round((solvedCount / problems.length) * 100)}%
+          {/* Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+            <div className="bg-blue-600 rounded-lg shadow p-6">
+              <div className="text-white text-sm font-semibold">Problems Solved</div>
+              <div className="text-3xl font-bold text-white mt-2">{solvedCount}</div>
+            </div>
+            <div className="bg-purple-600 rounded-lg shadow p-6">
+              <div className="text-white text-sm font-semibold">Problems Total</div>
+              <div className="text-3xl font-bold text-white mt-2">{problems.length}</div>
+            </div>
+            <div className="bg-green-600 rounded-lg shadow p-6">
+              <div className="text-white text-sm font-semibold">Success Rate</div>
+              <div className="text-3xl font-bold text-white mt-2">
+                {Math.round((solvedCount / problems.length) * 100)}%
+              </div>
+            </div>
+            <div className="bg-orange-600 rounded-lg shadow p-6">
+              <div className="text-white text-sm font-semibold">Streak</div>
+              <div className="text-3xl font-bold text-white mt-2">3 days</div>
             </div>
           </div>
-          <div className="bg-orange-400 rounded-lg shadow p-6">
-            <div className="text-white-600 text-sm font-semibold">Streak</div>
-            <div className="text-3xl font-bold text-white-600 mt-2">3 days</div>
-          </div>
-        </div>
 
-        {/* Problems List */}
-        <div>
-          <h2 className="text-2xl font-bold text-white-900 mb-6">Practice Problems</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {problems.map((problem) => (
-              <ProblemCard key={problem.id} {...problem} />
-            ))}
+          {/* Problems List */}
+          <div>
+            <h2 className="text-2xl font-bold text-white mb-6">Practice Problems</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {problems.map((problem) => (
+                <ProblemCard key={problem.id} {...problem} />
+              ))}
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </PageTransition>
   );
 }

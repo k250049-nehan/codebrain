@@ -12,9 +12,9 @@ interface ProblemCardProps {
 
 export default function ProblemCard({ id, title, difficulty, description, solved }: ProblemCardProps) {
   const difficultyColors = {
-    Easy: 'bg-green-500 text-white-800',
-    Medium: 'bg-yellow-500 text-white-800',
-    Hard: 'bg-red-400 text-white-800',
+    Easy: 'bg-green-500 text-white',
+    Medium: 'bg-yellow-500 text-white',
+    Hard: 'bg-red-400 text-white',
   };
 
   return (
