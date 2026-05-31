@@ -7,6 +7,8 @@ import PageTransition from '@/components/PageTransition';
 
 export default function Home() {
   // Animation variants
+
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -210,4 +212,5 @@ export default function Home() {
       </div>
     </PageTransition>
   );
+
 }
